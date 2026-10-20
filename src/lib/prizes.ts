@@ -1,0 +1,88 @@
+import type { Prize } from "./types";
+
+export const PRIZES: Prize[] = [
+    {
+        id: "tv-40",
+        name: "Smart TV 40 Inch",
+        shortName: "TV 40\"",
+        description: "Hadiah utama Gathering SBU HIMPM 2026 untuk satu karyawan ber-NPP yang beruntung.",
+        quantity: 1,
+        eligibility: "NPP",
+        tone: "grand",
+        visual: "tv",
+    },
+    {
+        id: "smartwatch",
+        name: "Smartwatch",
+        shortName: "Smartwatch",
+        description: "Tiga smartwatch modern untuk karyawan ber-NPP.",
+        quantity: 3,
+        eligibility: "NPP",
+        tone: "employee",
+        visual: "watch",
+    },
+    {
+        id: "tumbler",
+        name: "Tumbler Lock & Lock",
+        shortName: "Tumbler",
+        description: "Tiga tumbler premium Lock & Lock untuk karyawan ber-NPP.",
+        quantity: 3,
+        eligibility: "NPP",
+        tone: "employee",
+        visual: "tumbler",
+    },
+    {
+        id: "tws",
+        name: "True Wireless Stereo",
+        shortName: "TWS",
+        description: "Empat perangkat TWS untuk menemani perjalanan karyawan ber-NPP.",
+        quantity: 4,
+        eligibility: "NPP",
+        tone: "employee",
+        visual: "tws",
+    },
+    {
+        id: "kipas-elektrik",
+        name: "Kipas Tangan Elektrik",
+        shortName: "Kipas Elektrik",
+        description: "Lima kipas tangan elektrik untuk karyawan ber-NPP.",
+        quantity: 5,
+        eligibility: "NPP",
+        tone: "employee",
+        visual: "fan",
+    },
+    {
+        id: "gopay-150",
+        name: "GoPay Rp150.000",
+        shortName: "GoPay 150K",
+        description: "Saldo GoPay senilai Rp150.000 untuk sepuluh karyawan non-NPP.",
+        quantity: 10,
+        eligibility: "NON_NPP",
+        tone: "gopay",
+        visual: "gopay150",
+    },
+    {
+        id: "gopay-100",
+        name: "GoPay Rp100.000",
+        shortName: "GoPay 100K",
+        description: "Saldo GoPay senilai Rp100.000 untuk sepuluh karyawan non-NPP.",
+        quantity: 10,
+        eligibility: "NON_NPP",
+        tone: "gopay",
+        visual: "gopay100",
+    },
+    {
+        id: "gopay-50",
+        name: "GoPay Rp50.000",
+        shortName: "GoPay 50K",
+        description: "Saldo GoPay senilai Rp50.000 untuk dua puluh sembilan karyawan non-NPP.",
+        quantity: 29,
+        eligibility: "NON_NPP",
+        tone: "gopay",
+        visual: "gopay50",
+    },
+];
+
+export const getPrize = (id: string) => PRIZES.find((prize) => prize.id === id);
+
+export const TOTAL_PRIZES = PRIZES.reduce((total, prize) => total + prize.quantity, 0);
