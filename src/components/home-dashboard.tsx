@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Database, RotateCcw, Sparkles, Trophy, Users } from "lucide-react";
+import { Database, RotateCcw, Sparkles } from "lucide-react";
 import { useRaffle } from "@/context/raffle-context";
-import { PRIZES, TOTAL_PRIZES } from "@/lib/prizes";
+import { PRIZES } from "@/lib/prizes";
 import { PageDecorations } from "./decorations";
 import { EventHeader } from "./event-header";
 import { ParticipantManager } from "./participant-manager";
@@ -52,11 +52,6 @@ export function HomeDashboard() {
                             <span className="eyebrow">DAFTAR HADIAH</span>
                             <h3>Pilih Kategori Hadiah</h3>
                         </div>
-                        <div className="overall-progress">
-                            <Trophy size={18} />
-                            <span><b>{winners.length}</b> / {TOTAL_PRIZES} pemenang</span>
-                            <div className="progress-track"><i style={{ width: `${(winners.length / TOTAL_PRIZES) * 100}%` }} /></div>
-                        </div>
                     </div>
 
                     <div className="prize-grid">
@@ -71,7 +66,6 @@ export function HomeDashboard() {
                                     style={{ "--delay": `${index * 70}ms` } as React.CSSProperties}
                                 >
                                     <div className="prize-card-topline">
-                                        <span className="eligibility-badge"><Users size={13} /> {prize.eligibility === "NPP" ? "Karyawan NPP" : "Non NPP"}</span>
                                         {prize.tone === "grand" && <span className="grand-badge">HADIAH UTAMA</span>}
                                     </div>
                                     <div className="card-visual"><PrizeVisual prize={prize} compact /></div>

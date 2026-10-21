@@ -16,9 +16,6 @@ export function ParticipantManager({ open, onClose }: ParticipantManagerProps) {
     const [dragging, setDragging] = useState(false);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState("");
-    const nppCount = participants.filter((item) => item.type === "NPP").length;
-    const nonNppCount = participants.length - nppCount;
-
     const processFile = async (file?: File) => {
         if (!file) return;
         if (!/\.(xlsx|xls|csv)$/i.test(file.name)) {
@@ -73,8 +70,6 @@ export function ParticipantManager({ open, onClose }: ParticipantManagerProps) {
 
                 <div className="participant-stats">
                     <div><strong>{participants.length}</strong><span>Total Peserta</span></div>
-                    <div><strong>{nppCount}</strong><span>Karyawan NPP</span></div>
-                    <div><strong>{nonNppCount}</strong><span>Non NPP</span></div>
                 </div>
 
                 <div

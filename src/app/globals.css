@@ -490,7 +490,7 @@ a {
 .prize-card-topline {
   min-height: 46px;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: flex-start;
   padding: 16px 16px 0;
 }
@@ -764,7 +764,7 @@ a {
 
 .participant-stats {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 1fr;
   gap: 10px;
   margin-bottom: 15px;
 }

@@ -3,7 +3,7 @@
 import confetti from "canvas-confetti";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CheckCircle2, Gift, PartyPopper, Sparkles, Trophy, Users } from "lucide-react";
+import { CheckCircle2, Gift, PartyPopper, Sparkles, Trophy } from "lucide-react";
 import { useRaffle } from "@/context/raffle-context";
 import { playShuffleSound, playWinSound } from "@/lib/sound";
 import type { Participant, Prize } from "@/lib/types";
@@ -79,7 +79,6 @@ export function PrizeDraw({ prize }: { prize: Prize }) {
                         <h2>{prize.name}</h2>
                         <p>{prize.description}</p>
                         <div className="draw-badges">
-                            <span><Users size={15} /> Khusus {prize.eligibility === "NPP" ? "Karyawan NPP" : "Karyawan Non NPP"}</span>
                             <span><Trophy size={15} /> {prize.quantity} Pemenang</span>
                         </div>
                     </div>
@@ -155,7 +154,6 @@ export function PrizeDraw({ prize }: { prize: Prize }) {
                                     <span className="winner-number">{String(index + 1).padStart(2, "0")}</span>
                                     <div className="winner-avatar">{winner.name.charAt(0).toUpperCase()}</div>
                                     <div className="winner-identity"><b>{winner.name}</b><small>{winner.employeeId}{winner.department ? ` · ${winner.department}` : ""}</small></div>
-                                    <span className="winner-category">{winner.type === "NPP" ? "NPP" : "NON NPP"}</span>
                                     <CheckCircle2 size={20} />
                                 </div>
                             ))}
