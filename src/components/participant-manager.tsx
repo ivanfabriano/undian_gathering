@@ -12,6 +12,8 @@ type ParticipantManagerProps = {
 
 export function ParticipantManager({ open, onClose }: ParticipantManagerProps) {
     const { participants, setParticipants, clearParticipants } = useRaffle();
+    const nppCount = participants.filter((participant) => participant.type === "NPP").length;
+    const nonNppCount = participants.length - nppCount;
     const inputRef = useRef<HTMLInputElement>(null);
     const [dragging, setDragging] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -70,6 +72,8 @@ export function ParticipantManager({ open, onClose }: ParticipantManagerProps) {
 
                 <div className="participant-stats">
                     <div><strong>{participants.length}</strong><span>Total Peserta</span></div>
+                    <div><strong>{nppCount}</strong><span>NPP · Semua Hadiah</span></div>
+                    <div><strong>{nonNppCount}</strong><span>NON NPP · GoPay</span></div>
                 </div>
 
                 <div
@@ -107,6 +111,7 @@ export function ParticipantManager({ open, onClose }: ParticipantManagerProps) {
                 </div>
 
                 <div className="template-note">
+                    <b>Aturan hadiah:</b> Peserta NPP berhak mengikuti undian hadiah fisik dan GoPay. Peserta NON NPP hanya berhak mengikuti undian GoPay.<br />
                     <b>Kolom wajib:</b> Nama dan NPP/ID. Kolom Unit/Divisi bersifat opsional. Mengunggah file baru akan menghapus seluruh hasil undian sebelumnya.
                 </div>
             </section>

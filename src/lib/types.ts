@@ -1,4 +1,5 @@
 export type ParticipantType = "NPP" | "NON_NPP";
+export type PrizeEligibility = ParticipantType[];
 
 export type Participant = {
     id: string;
@@ -20,14 +21,17 @@ export type Prize = {
     shortName: string;
     description: string;
     quantity: number;
-    eligibility: ParticipantType;
+    eligibility: PrizeEligibility;
     tone: "grand" | "employee" | "gopay";
     visual: "tv" | "watch" | "tumbler" | "tws" | "fan" | "gopay150" | "gopay100" | "gopay50";
 };
 
+export type PrizeQuantities = Record<string, number>;
+
 export type RaffleState = {
     participants: Participant[];
     winners: Winner[];
+    prizeQuantities: PrizeQuantities;
 };
 
 export type ImportResult = {

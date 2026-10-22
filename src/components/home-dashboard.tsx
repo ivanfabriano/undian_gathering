@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Database, RotateCcw, Sparkles } from "lucide-react";
+import { Database, RotateCcw, Settings, Sparkles } from "lucide-react";
 import { useRaffle } from "@/context/raffle-context";
 import { PRIZES } from "@/lib/prizes";
 import { PageDecorations } from "./decorations";
@@ -11,7 +11,7 @@ import { ParticipantManager } from "./participant-manager";
 import { PrizeVisual } from "./prize-visual";
 
 export function HomeDashboard() {
-    const { participants, winners, winnersForPrize, resetDraws, ready } = useRaffle();
+    const { participants, winners, winnersForPrize, prizeQuantity, resetDraws, ready } = useRaffle();
     const [managerOpen, setManagerOpen] = useState(false);
     const handleReset = () => {
         if (!winners.length) return;
@@ -36,6 +36,9 @@ export function HomeDashboard() {
                         <span className={`status-dot ${participants.length ? "is-ready" : ""}`} />
                         {ready ? (participants.length ? `${participants.length} peserta` : "Unggah database") : "Memuat..."}
                     </button>
+                    <Link href="/pengaturan-hadiah" className="database-trigger">
+                        <Settings size={15} /> Atur Hadiah
+                    </Link>
                     <button
                         className="reset-button reset-button--compact"
                         onClick={handleReset}
@@ -56,8 +59,9 @@ export function HomeDashboard() {
 
                     <div className="prize-grid">
                         {PRIZES.map((prize, index) => {
+                            const quantity = prizeQuantity(prize.id);
                             const won = winnersForPrize(prize.id).length;
-                            const complete = won >= prize.quantity;
+                            const complete = won >= quantity;
                             return (
                                 <Link
                                     key={prize.id}
@@ -72,10 +76,10 @@ export function HomeDashboard() {
                                     <div className="prize-card-body">
                                         <small>{String(index + 1).padStart(2, "0")}</small>
                                         <h4>{prize.shortName}</h4>
-                                        <p>{prize.quantity} {prize.quantity === 1 ? "Pemenang" : "Pemenang"}</p>
+                                        <p>{quantity} Pemenang</p>
                                     </div>
                                     <div className="card-status">
-                                        <span>{complete ? "Undian selesai" : won ? `${won} dari ${prize.quantity} terpilih` : "Klik untuk mengundi"}</span>
+                                        <span>{complete ? "Undian selesai" : won ? `${won} dari ${quantity} terpilih` : "Klik untuk mengundi"}</span>
                                         <i>{complete ? "✓" : "→"}</i>
                                     </div>
                                 </Link>

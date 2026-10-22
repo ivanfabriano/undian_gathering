@@ -9,19 +9,30 @@ import {
     useState,
     type ReactNode,
 } from "react";
-import type { Participant, ParticipantType, RaffleState, Winner } from "@/lib/types";
+import { PRIZES } from "@/lib/prizes";
+import type { Participant, PrizeEligibility, PrizeQuantities, RaffleState, Winner } from "@/lib/types";
 
 const STORAGE_KEY = "golden-hours-raffle-v1";
-const EMPTY_STATE: RaffleState = { participants: [], winners: [] };
+const DEFAULT_PRIZE_QUANTITIES: PrizeQuantities = Object.fromEntries(
+    PRIZES.map((prize) => [prize.id, prize.quantity]),
+);
+const EMPTY_STATE: RaffleState = {
+    participants: [],
+    winners: [],
+    prizeQuantities: DEFAULT_PRIZE_QUANTITIES,
+};
 
 type RaffleContextValue = RaffleState & {
     ready: boolean;
     setParticipants: (participants: Participant[]) => void;
-    drawWinners: (prizeId: string, eligibility: ParticipantType, count: number) => Participant[];
+    drawWinners: (prizeId: string, eligibility: PrizeEligibility, count: number) => Participant[];
+    setPrizeQuantity: (prizeId: string, quantity: number) => void;
+    resetPrizeQuantities: () => void;
     resetDraws: () => void;
     clearParticipants: () => void;
     winnersForPrize: (prizeId: string) => Participant[];
-    eligibleCount: (type: ParticipantType) => number;
+    eligibleCount: (eligibility: PrizeEligibility) => number;
+    prizeQuantity: (prizeId: string) => number;
 };
 
 const RaffleContext = createContext<RaffleContextValue | null>(null);
@@ -56,7 +67,33 @@ export function RaffleProvider({ children }: { children: ReactNode }) {
         const timer = window.setTimeout(() => {
             try {
                 const stored = localStorage.getItem(STORAGE_KEY);
-                if (stored) setState(JSON.parse(stored) as RaffleState);
+                if (stored) {
+                    const parsed = JSON.parse(stored) as Partial<RaffleState>;
+                    const winners = Array.isArray(parsed.winners) ? parsed.winners : [];
+                    const winnerCounts = winners.reduce<Record<string, number>>((counts, winner) => {
+                        counts[winner.prizeId] = (counts[winner.prizeId] ?? 0) + 1;
+                        return counts;
+                    }, {});
+                    const savedQuantities = Object.fromEntries(
+                        Object.entries(parsed.prizeQuantities ?? {}).filter(
+                            ([, quantity]) => Number.isInteger(quantity) && quantity >= 0,
+                        ),
+                    );
+                    const prizeQuantities = Object.fromEntries(
+                        PRIZES.map((prize) => [
+                            prize.id,
+                            Math.max(
+                                savedQuantities[prize.id] ?? DEFAULT_PRIZE_QUANTITIES[prize.id],
+                                winnerCounts[prize.id] ?? 0,
+                            ),
+                        ]),
+                    );
+                    setState({
+                        participants: Array.isArray(parsed.participants) ? parsed.participants : [],
+                        winners,
+                        prizeQuantities,
+                    });
+                }
             } catch {
                 localStorage.removeItem(STORAGE_KEY);
             } finally {
@@ -71,14 +108,14 @@ export function RaffleProvider({ children }: { children: ReactNode }) {
     }, [ready, state]);
 
     const setParticipants = useCallback((participants: Participant[]) => {
-        setState({ participants, winners: [] });
+        setState((current) => ({ ...current, participants, winners: [] }));
     }, []);
 
     const drawWinners = useCallback(
-        (prizeId: string, eligibility: ParticipantType, count: number) => {
+        (prizeId: string, eligibility: PrizeEligibility, count: number) => {
             const alreadyWon = new Set(state.winners.map((winner) => winner.participantId));
             const candidates = state.participants.filter(
-                (participant) => participant.type === eligibility && !alreadyWon.has(participant.id),
+                (participant) => eligibility.includes(participant.type) && !alreadyWon.has(participant.id),
             );
             const selected = secureShuffle(candidates).slice(0, Math.min(count, candidates.length));
             if (!selected.length) return [];
@@ -95,12 +132,36 @@ export function RaffleProvider({ children }: { children: ReactNode }) {
         [state.participants, state.winners],
     );
 
+    const setPrizeQuantity = useCallback((prizeId: string, quantity: number) => {
+        setState((current) => {
+            const winnerCount = current.winners.filter((winner) => winner.prizeId === prizeId).length;
+            const nextQuantity = Math.max(winnerCount, Math.floor(Number.isFinite(quantity) ? quantity : 0));
+            return {
+                ...current,
+                prizeQuantities: { ...current.prizeQuantities, [prizeId]: nextQuantity },
+            };
+        });
+    }, []);
+
+    const resetPrizeQuantities = useCallback(() => {
+        setState((current) => {
+            const winnerCounts = current.winners.reduce<Record<string, number>>((counts, winner) => {
+                counts[winner.prizeId] = (counts[winner.prizeId] ?? 0) + 1;
+                return counts;
+            }, {});
+            const prizeQuantities = Object.fromEntries(
+                PRIZES.map((prize) => [prize.id, Math.max(prize.quantity, winnerCounts[prize.id] ?? 0)]),
+            );
+            return { ...current, prizeQuantities };
+        });
+    }, []);
+
     const resetDraws = useCallback(() => {
         setState((current) => ({ ...current, winners: [] }));
     }, []);
 
     const clearParticipants = useCallback(() => {
-        setState(EMPTY_STATE);
+        setState((current) => ({ ...current, participants: [], winners: [] }));
     }, []);
 
     const value = useMemo<RaffleContextValue>(() => {
@@ -112,6 +173,8 @@ export function RaffleProvider({ children }: { children: ReactNode }) {
             ready,
             setParticipants,
             drawWinners,
+            setPrizeQuantity,
+            resetPrizeQuantities,
             resetDraws,
             clearParticipants,
             winnersForPrize: (prizeId) =>
@@ -119,11 +182,22 @@ export function RaffleProvider({ children }: { children: ReactNode }) {
                     .filter((winner) => winner.prizeId === prizeId)
                     .map((winner) => winnerMap.get(winner.participantId))
                     .filter((participant): participant is Participant => Boolean(participant)),
-            eligibleCount: (type) =>
-                state.participants.filter((participant) => participant.type === type && !wonIds.has(participant.id))
-                    .length,
+            eligibleCount: (eligibility) =>
+                state.participants.filter(
+                    (participant) => eligibility.includes(participant.type) && !wonIds.has(participant.id),
+                ).length,
+            prizeQuantity: (prizeId) => state.prizeQuantities[prizeId] ?? 0,
         };
-    }, [clearParticipants, drawWinners, ready, resetDraws, setParticipants, state]);
+    }, [
+        clearParticipants,
+        drawWinners,
+        ready,
+        resetDraws,
+        resetPrizeQuantities,
+        setParticipants,
+        setPrizeQuantity,
+        state,
+    ]);
 
     return <RaffleContext.Provider value={value}>{children}</RaffleContext.Provider>;
 }

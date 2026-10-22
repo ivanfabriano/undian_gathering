@@ -12,21 +12,25 @@ import { EventHeader } from "./event-header";
 import { PrizeVisual } from "./prize-visual";
 
 export function PrizeDraw({ prize }: { prize: Prize }) {
-    const { participants, winnersForPrize, eligibleCount, drawWinners, ready } = useRaffle();
+    const { participants, winnersForPrize, eligibleCount, drawWinners, prizeQuantity, ready } = useRaffle();
     const [drawing, setDrawing] = useState(false);
     const [rollingName, setRollingName] = useState("Siap untuk diundi");
     const [newWinners, setNewWinners] = useState<Participant[]>([]);
     const [newWinnerStart, setNewWinnerStart] = useState(0);
     const timers = useRef<number[]>([]);
     const existingWinners = winnersForPrize(prize.id);
-    const remaining = Math.max(0, prize.quantity - existingWinners.length);
+    const quantity = prizeQuantity(prize.id);
+    const remaining = Math.max(0, quantity - existingWinners.length);
     const available = eligibleCount(prize.eligibility);
     const complete = remaining === 0;
 
     const eligibleNames = useMemo(
-        () => participants.filter((participant) => participant.type === prize.eligibility).map((participant) => participant.name),
+        () => participants
+            .filter((participant) => prize.eligibility.includes(participant.type))
+            .map((participant) => participant.name),
         [participants, prize.eligibility],
     );
+    const eligibilityLabel = prize.eligibility.length === 2 ? "NPP & NON NPP" : "KHUSUS NPP";
 
     useEffect(() => () => timers.current.forEach(window.clearTimeout), []);
 
@@ -79,7 +83,8 @@ export function PrizeDraw({ prize }: { prize: Prize }) {
                         <h2>{prize.name}</h2>
                         <p>{prize.description}</p>
                         <div className="draw-badges">
-                            <span><Trophy size={15} /> {prize.quantity} Pemenang</span>
+                            <span><Trophy size={15} /> {quantity} Pemenang</span>
+                            <span>{eligibilityLabel}</span>
                         </div>
                     </div>
                     <div className="draw-visual-wrap">
@@ -146,7 +151,7 @@ export function PrizeDraw({ prize }: { prize: Prize }) {
                     <section className="winner-history">
                         <div className="section-heading">
                             <div><span className="eyebrow">HASIL UNDIAN</span><h3>Daftar Pemenang</h3></div>
-                            <span className="winner-count">{existingWinners.length}/{prize.quantity} terpilih</span>
+                            <span className="winner-count">{existingWinners.length}/{quantity} terpilih</span>
                         </div>
                         <div className="winner-list">
                             {existingWinners.map((winner, index) => (
