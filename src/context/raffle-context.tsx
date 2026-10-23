@@ -9,7 +9,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { PRIZES } from "@/lib/prizes";
+import { getPrize, isReservedForOtherPrize, PRIZES } from "@/lib/prizes";
 import type {
   Participant,
   PrizeEligibility,
@@ -44,6 +44,7 @@ type RaffleContextValue = RaffleState & {
   clearParticipants: () => void;
   winnersForPrize: (prizeId: string) => Participant[];
   eligibleCount: (
+    prizeId: string,
     eligibility: PrizeEligibility,
     requiredDepartment?: string,
   ) => number;
@@ -84,7 +85,30 @@ export function RaffleProvider({ children }: { children: ReactNode }) {
         const stored = localStorage.getItem(STORAGE_KEY);
         if (stored) {
           const parsed = JSON.parse(stored) as Partial<RaffleState>;
-          const winners = Array.isArray(parsed.winners) ? parsed.winners : [];
+          const participants = Array.isArray(parsed.participants)
+            ? parsed.participants
+            : [];
+          const participantMap = new Map(
+            participants.map((participant) => [participant.id, participant]),
+          );
+          const winners = (
+            Array.isArray(parsed.winners) ? parsed.winners : []
+          ).filter((winner) => {
+            const participant = participantMap.get(winner.participantId);
+            const prize = getPrize(winner.prizeId);
+            const normalizedDepartment = prize?.requiredDepartment
+              ?.trim()
+              .toLocaleLowerCase("id-ID");
+            return (
+              participant &&
+              prize &&
+              prize.eligibility.includes(participant.type) &&
+              !isReservedForOtherPrize(participant.name, winner.prizeId) &&
+              (!normalizedDepartment ||
+                participant.department?.trim().toLocaleLowerCase("id-ID") ===
+                  normalizedDepartment)
+            );
+          });
           const winnerCounts = winners.reduce<Record<string, number>>(
             (counts, winner) => {
               counts[winner.prizeId] = (counts[winner.prizeId] ?? 0) + 1;
@@ -106,13 +130,7 @@ export function RaffleProvider({ children }: { children: ReactNode }) {
               ),
             ]),
           );
-          setState({
-            participants: Array.isArray(parsed.participants)
-              ? parsed.participants
-              : [],
-            winners,
-            prizeQuantities,
-          });
+          setState({ participants, winners, prizeQuantities });
         }
       } catch {
         localStorage.removeItem(STORAGE_KEY);
@@ -149,6 +167,7 @@ export function RaffleProvider({ children }: { children: ReactNode }) {
         (participant) =>
           eligibility.includes(participant.type) &&
           !alreadyWon.has(participant.id) &&
+          !isReservedForOtherPrize(participant.name, prizeId) &&
           (!normalizedDepartment ||
             participant.department?.trim().toLocaleLowerCase("id-ID") ===
               normalizedDepartment),
@@ -271,7 +290,7 @@ export function RaffleProvider({ children }: { children: ReactNode }) {
           .filter((participant): participant is Participant =>
             Boolean(participant),
           ),
-      eligibleCount: (eligibility, requiredDepartment) => {
+      eligibleCount: (prizeId, eligibility, requiredDepartment) => {
         const normalizedDepartment = requiredDepartment
           ?.trim()
           .toLocaleLowerCase("id-ID");
@@ -279,6 +298,7 @@ export function RaffleProvider({ children }: { children: ReactNode }) {
           (participant) =>
             eligibility.includes(participant.type) &&
             !wonIds.has(participant.id) &&
+            !isReservedForOtherPrize(participant.name, prizeId) &&
             (!normalizedDepartment ||
               participant.department?.trim().toLocaleLowerCase("id-ID") ===
                 normalizedDepartment),

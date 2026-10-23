@@ -58,9 +58,10 @@ export const PRIZES: Prize[] = [
     id: "gopay-100",
     name: "GoPay Rp100.000",
     shortName: "GoPay 100K",
-    description: "Saldo GoPay senilai Rp100.000 untuk peserta yang beruntung.",
+    description:
+      "Saldo GoPay senilai Rp100.000 untuk peserta NON NPP yang beruntung.",
     quantity: 16,
-    eligibility: ["NPP", "NON_NPP"],
+    eligibility: ["NON_NPP"],
     tone: "gopay",
     visual: "gopay100",
   },
@@ -79,6 +80,21 @@ export const PRIZES: Prize[] = [
 ];
 
 export const getPrize = (id: string) => PRIZES.find((prize) => prize.id === id);
+
+const normalizeParticipantName = (name: string) =>
+  name.trim().toLocaleLowerCase("id-ID");
+
+export const isReservedForOtherPrize = (name: string, prizeId: string) => {
+  const normalizedName = normalizeParticipantName(name);
+  return PRIZES.some(
+    (prize) =>
+      prize.id !== prizeId &&
+      prize.simulationWinnerNames?.some(
+        (reservedName) =>
+          normalizeParticipantName(reservedName) === normalizedName,
+      ),
+  );
+};
 
 export const TOTAL_PRIZES = PRIZES.reduce(
   (total, prize) => total + prize.quantity,

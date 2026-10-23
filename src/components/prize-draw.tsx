@@ -12,6 +12,7 @@ import {
   Trophy,
 } from "lucide-react";
 import { useRaffle } from "@/context/raffle-context";
+import { isReservedForOtherPrize } from "@/lib/prizes";
 import { playShuffleSound, playWinSound } from "@/lib/sound";
 import type { Participant, Prize } from "@/lib/types";
 import { PageDecorations } from "./decorations";
@@ -36,7 +37,11 @@ export function PrizeDraw({ prize }: { prize: Prize }) {
   const existingWinners = winnersForPrize(prize.id);
   const quantity = prizeQuantity(prize.id);
   const remaining = Math.max(0, quantity - existingWinners.length);
-  const available = eligibleCount(prize.eligibility, prize.requiredDepartment);
+  const available = eligibleCount(
+    prize.id,
+    prize.eligibility,
+    prize.requiredDepartment,
+  );
   const complete = remaining === 0;
   const normalizedDepartment = prize.requiredDepartment
     ?.trim()
@@ -61,12 +66,13 @@ export function PrizeDraw({ prize }: { prize: Prize }) {
         .filter(
           (participant) =>
             prize.eligibility.includes(participant.type) &&
+            !isReservedForOtherPrize(participant.name, prize.id) &&
             (!normalizedDepartment ||
               participant.department?.trim().toLocaleLowerCase("id-ID") ===
                 normalizedDepartment),
         )
         .map((participant) => participant.name),
-    [normalizedDepartment, participants, prize.eligibility],
+    [normalizedDepartment, participants, prize.eligibility, prize.id],
   );
 
   useEffect(() => () => timers.current.forEach(window.clearTimeout), []);
